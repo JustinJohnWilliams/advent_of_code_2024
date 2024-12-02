@@ -1,0 +1,22 @@
+name: Advent of Code Builder
+
+on: [push]
+
+jobs:
+  build:
+    name: build and run
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 9.0.x
+      - name: Run all the things
+        run: |
+            find . -name '*.csproj' -exec dirname {} \; | sort | while read dir; do
+              cd $dir
+              dotnet run || echo "Failed to run $dir"
+              cd -
+            done
