@@ -37,25 +37,12 @@ Console.WriteLine($"*************Day 2  DONE*************");
     sw.Start();
 
     var reports = parse_text(File.ReadAllLines(file));
-    var noBueno = new Dictionary<string, List<int>>();
 
     foreach(var report in reports)
     {
-        var lgtm = process_report(report.Value);
-        if(lgtm) result++;
-
-        if(!lgtm)
-        {
-            noBueno.Add(report.Key, report.Value);
-        }
-    }
-
-    foreach(var nope in noBueno)
-    {
-        var score = calculate_score(nope.Value);
+        var score = calculate_score(report.Value);
         if(score == 1) result++;
     }
-
 
     sw.Stop();
 
@@ -65,6 +52,8 @@ Console.WriteLine($"*************Day 2  DONE*************");
 int calculate_score(List<int> report)
 {
     var score = 0;
+
+    if(process_report(report)) return 1;
 
     for(int i = 0; i < report.Count; i++)
     {
