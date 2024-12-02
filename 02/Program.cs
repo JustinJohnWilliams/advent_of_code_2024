@@ -36,9 +36,47 @@ Console.WriteLine($"*************Day 2  DONE*************");
     var sw = new System.Diagnostics.Stopwatch();
     sw.Start();
 
+    var reports = parse_text(File.ReadAllLines(file));
+    var noBueno = new Dictionary<string, List<int>>();
+
+    foreach(var report in reports)
+    {
+        var lgtm = process_report(report.Value);
+        if(lgtm) result++;
+
+        if(!lgtm)
+        {
+            noBueno.Add(report.Key, report.Value);
+        }
+    }
+
+    foreach(var nope in noBueno)
+    {
+        var score = calculate_score(nope.Value);
+        if(score == 1) result++;
+    }
+
+
     sw.Stop();
 
     return(result, sw.Elapsed.TotalMilliseconds);
+}
+
+int calculate_score(List<int> report)
+{
+    var score = 0;
+
+    for(int i = 0; i < report.Count; i++)
+    {
+        var temp_report = report.Where((_, index) => index != i).ToList();
+        if(process_report(temp_report))
+        {
+            score++;
+            break;
+        }
+    }
+
+    return score;
 }
 
 bool process_report(List<int> report)
