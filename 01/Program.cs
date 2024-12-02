@@ -13,30 +13,14 @@ Console.WriteLine($"*************Day 1  DONE*************");
     var sw = new System.Diagnostics.Stopwatch();
     sw.Start();
 
-    var input = File.ReadAllLines(file);
+    var columns = parse_text(File.ReadAllLines(file));
 
-    var a = new List<int>();
-    var b = new List<int>();
-    var c = new List<int>();
+    var result = 0;
 
-    foreach(var line in input)
+    for(int i = 0; i < columns.left.Count; i++)
     {
-        var parts = line.Split(" ", StringSplitOptions.RemoveEmptyEntries);
-        a.Add(Convert.ToInt32(parts[0]));
-        b.Add(Convert.ToInt32(parts[1]));
+        result += Math.Abs(columns.left[i] - columns.right[i]);
     }
-
-    a = a.OrderBy(a => a).ToList();
-    b = b.OrderBy(b => b).ToList();
-
-    Console.WriteLine($"Equal: {a.Count == b.Count}");
-
-    for(int i = 0; i < a.Count; i++)
-    {
-        c.Add(Math.Abs(a[i] - b[i]));
-    }
-
-    var result = c.Sum(c => c);
 
     sw.Stop();
 
@@ -49,27 +33,36 @@ Console.WriteLine($"*************Day 1  DONE*************");
     sw.Start();
 
     var input = File.ReadAllLines(file);
+    var columns = parse_text(File.ReadAllLines(file));
 
+    var result = 0;
+
+    foreach(var x in columns.left)
+    {
+        var multiplier = columns.right.Count(c => c == x);
+        result += x * multiplier;
+    }
+
+    sw.Stop();
+
+    return(result, sw.Elapsed.TotalMilliseconds);
+}
+
+(List<int> left, List<int> right) parse_text(string[] text)
+{
     var a = new List<int>();
     var b = new List<int>();
     var c = new List<int>();
 
-    foreach(var line in input)
+    foreach(var line in text)
     {
         var parts = line.Split(" ", StringSplitOptions.RemoveEmptyEntries);
         a.Add(Convert.ToInt32(parts[0]));
         b.Add(Convert.ToInt32(parts[1]));
     }
 
-    foreach(var x in a)
-    {
-        var multiplier = b.Count(c => c == x);
-        c.Add(x * multiplier);
-    }
+    a.Sort();
+    b.Sort();
 
-    var result = c.Sum(c => c);
-
-    sw.Stop();
-
-    return(result, sw.Elapsed.TotalMilliseconds);
+    return (a, b);
 }
