@@ -69,6 +69,32 @@ Console.WriteLine($"*************Day 4  DONE*************");
 
     var result = 0;
 
+    var map = File.ReadAllLines(file)
+                    .Select(c => c.ToCharArray())
+                    .ToArray();
+
+    var h = map.Length;
+    var w = map[0].Length;
+
+    var coords = new List<Point>();
+
+    for (int row = 1; row < h - 1; row++)
+    {
+        for (int col = 1; col < map[row].Length - 1; col++)
+        {
+            if (map[row][col] == 'A')
+            {
+                coords.Add(new Point(row, col));
+            }
+        }
+    }
+
+    foreach (var point in coords)
+    {
+        var corners = point.GrabCorners(map);
+        if (corners.IsValidCross()) result++;
+    }
+
 
     sw.Stop();
 
@@ -87,7 +113,7 @@ public class Point(int x, int y)
 
 }
 
-public static class extensions
+public static class Extensions
 {
     public static bool IsBeginningOfXmas(this char c) => c == 'X';
 
