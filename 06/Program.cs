@@ -37,8 +37,14 @@ Console.WriteLine($"*************Day 6  DONE*************");
     sw.Start();
 
     var result = 0;
-    var contents = File.ReadAllText(file);
+    var map = File.ReadAllLines(file)
+                    .Select(c => c.ToCharArray())
+                    .ToArray();
 
+    var guard = map.FindGuard();
+
+    var loops = FindLoops(map, guard.current_position, guard.move_dir);
+    result += loops.Count;
 
     sw.Stop();
 
@@ -71,7 +77,71 @@ void WalkTheGuard(char[][] map, (int x, int y) curr_pos, (int dx, int dy) move_d
     }
 }
 
-public static class extensions
+HashSet<(int x, int y)> FindLoops(char[][] map, (int x, int y) star_pos, (int dx, int dy) start_dir)
+{
+    var loops = new HashSet<(int, int)>();
+
+    var rows = map.Length;
+    var cols = map[0].Length;
+
+    for(int r = 0; r < rows; r++)
+    {
+        for(int c = 0; c < cols; c++)
+        {
+            if(map[r][c].IsOpen() && (r, c) != star_pos)
+            {
+                map[r][c] = '#';
+                if(IsGuardStuck(map, star_pos, start_dir))
+                {
+                    loops.Add((r, c));
+                }
+
+                map[r][c] = '.';
+            }
+        }
+    }
+
+    return loops;
+}
+
+bool IsGuardStuck(char[][] map, (int x, int y) start_pos, (int dx, int dy) start_dir)
+{
+    var visited = new HashSet<((int x, int y) position, (int dx, int dy) direction)>();
+
+    var rows = map.Length;
+    var cols = map[0].Length;
+
+    (int x, int y) position = start_pos;
+    (int dx, int dy) direction = start_dir;
+
+    //Call WalkTheGuard?
+
+    while(true)
+    {
+        var next = (position.x + direction.dx, position.y + direction.dy);
+
+        if(next.Item1 < 0 || next.Item1 >= rows
+          || next.Item2 < 0 || next.Item2 >= cols)
+        {
+            return false;
+        }
+        else if(map[next.Item1][next.Item2].IsObstruction())
+        {
+            direction = direction.rotate_90();
+        }
+        else
+        {
+            position = next;
+        }
+
+        if(visited.Add((position, direction)) is false)
+        {
+            return true;
+        }
+    }
+}
+
+public static class Extensions
 {
     public static bool IsGuard(this char c)
     {
@@ -81,6 +151,11 @@ public static class extensions
     public static bool IsObstruction(this char c)
     {
         return c == '#';
+    }
+
+    public static bool IsOpen(this char c)
+    {
+        return c == '.';
     }
 
     public static (int x, int y) rotate_90(this (int dx, int dy) dir)
