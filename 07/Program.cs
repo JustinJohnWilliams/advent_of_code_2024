@@ -59,8 +59,8 @@ Dictionary<long, List<long>> GenerateCalcs(string[] input)
 
     foreach(var line in input)
     {
-        var parts = line.Split(':');
-        var nums = parts[1].Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(c => Convert.ToInt64(c));
+        var parts = line.SplitAndRemoveEmpty(':');
+        var nums = parts[1].SplitAndRemoveEmpty(' ').Select(c => Convert.ToInt64(c));
         results.Add(Convert.ToInt64(parts[0]), [..nums]);
     }
 
@@ -82,23 +82,24 @@ bool Evaluate(long[] numbers, int idx, long curr, long target, bool canConcat)
     long nextValue = numbers[idx + 1];
 
     if (Evaluate(numbers, idx + 1, curr + nextValue, target, canConcat))
-    {
         return true;
-    }
 
     if (Evaluate(numbers, idx + 1, curr * nextValue, target, canConcat))
-    {
         return true;
-    }
 
     if(canConcat)
     {
-        var concat = long.Parse(curr.ToString() + nextValue.ToString());
-        if(Evaluate(numbers, idx + 1, concat, target, canConcat))
-        {
+        if(Evaluate(numbers, idx + 1, curr.ConcatWith(nextValue), target, canConcat))
             return true;
-        }
     }
 
     return false;
+}
+
+public static class Extensions
+{
+    public static long ConcatWith(this long l, long r) =>
+        long.Parse(l.ToString() + r.ToString());
+    public static string[] SplitAndRemoveEmpty(this string str, char c) =>
+        str.Split(c, StringSplitOptions.RemoveEmptyEntries);
 }
