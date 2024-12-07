@@ -1,5 +1,3 @@
-using System.Data;
-
 Console.WriteLine();
 Console.WriteLine($"*************Day 7 START*************");
 
@@ -38,7 +36,17 @@ Console.WriteLine($"*************Day 7  DONE*************");
     var sw = new System.Diagnostics.Stopwatch();
     sw.Start();
 
-    var result = 0;
+    long result = 0;
+    var input = File.ReadAllLines(file);
+    var calcs = GenerateCalcs(input);
+
+    foreach(var calc in calcs)
+    {
+        if(CanMath([.. calc.Value], calc.Key, true))
+        {
+            result += calc.Key;
+        }
+    }
 
     sw.Stop();
 
@@ -59,12 +67,12 @@ Dictionary<long, List<long>> GenerateCalcs(string[] input)
     return results;
 }
 
-bool CanMath(long[] numbers, long target)
+bool CanMath(long[] numbers, long target, bool canConcat = false)
 {
-    return Evaluate(numbers, 0, numbers[0], target);
+    return Evaluate(numbers, 0, numbers[0], target, canConcat);
 }
 
-bool Evaluate(long[] numbers, int idx, long curr, long target)
+bool Evaluate(long[] numbers, int idx, long curr, long target, bool canConcat)
 {
     if (idx == numbers.Length - 1)
     {
@@ -73,14 +81,23 @@ bool Evaluate(long[] numbers, int idx, long curr, long target)
 
     long nextValue = numbers[idx + 1];
 
-    if (Evaluate(numbers, idx + 1, curr + nextValue, target))
+    if (Evaluate(numbers, idx + 1, curr + nextValue, target, canConcat))
     {
         return true;
     }
 
-    if (Evaluate(numbers, idx + 1, curr * nextValue, target))
+    if (Evaluate(numbers, idx + 1, curr * nextValue, target, canConcat))
     {
         return true;
+    }
+
+    if(canConcat)
+    {
+        var concat = long.Parse(curr.ToString() + nextValue.ToString());
+        if(Evaluate(numbers, idx + 1, concat, target, canConcat))
+        {
+            return true;
+        }
     }
 
     return false;
