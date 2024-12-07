@@ -1,3 +1,5 @@
+using System.Data;
+
 Console.WriteLine();
 Console.WriteLine($"*************Day 7 START*************");
 
@@ -13,7 +15,18 @@ Console.WriteLine($"*************Day 7  DONE*************");
     var sw = new System.Diagnostics.Stopwatch();
     sw.Start();
 
-    var result = 0;
+    long result = 0;
+
+    var input = File.ReadAllLines(file);
+    var calcs = GenerateCalcs(input);
+
+    foreach(var calc in calcs)
+    {
+        if(CanMath([.. calc.Value], calc.Key))
+        {
+            result += calc.Key;
+        }
+    }
 
     sw.Stop();
 
@@ -30,4 +43,45 @@ Console.WriteLine($"*************Day 7  DONE*************");
     sw.Stop();
 
     return (result, sw.Elapsed.TotalMilliseconds);
+}
+
+Dictionary<long, List<long>> GenerateCalcs(string[] input)
+{
+    var results = new Dictionary<long, List<long>>();
+
+    foreach(var line in input)
+    {
+        var parts = line.Split(':');
+        var nums = parts[1].Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(c => Convert.ToInt64(c));
+        results.Add(Convert.ToInt64(parts[0]), [..nums]);
+    }
+
+    return results;
+}
+
+bool CanMath(long[] numbers, long target)
+{
+    return Evaluate(numbers, 0, numbers[0], target);
+}
+
+bool Evaluate(long[] numbers, int idx, long curr, long target)
+{
+    if (idx == numbers.Length - 1)
+    {
+        return curr == target;
+    }
+
+    long nextValue = numbers[idx + 1];
+
+    if (Evaluate(numbers, idx + 1, curr + nextValue, target))
+    {
+        return true;
+    }
+
+    if (Evaluate(numbers, idx + 1, curr * nextValue, target))
+    {
+        return true;
+    }
+
+    return false;
 }
