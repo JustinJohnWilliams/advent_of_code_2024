@@ -45,14 +45,30 @@ Console.WriteLine($"*************Day 10  DONE*************");
 
     var result = 0;
 
-    var input = File.ReadAllLines(file);
+    var input = File.ReadAllLines(file)
+                    .Select(line => line.Select(c => Convert.ToInt32(c.ToString())).ToArray())
+                    .ToArray();
+
+    var rows = input.Length;
+    var cols = input[0].Length;
+
+    for(int x = 0; x < rows; x++)
+    {
+        for(int y = 0; y < cols; y++)
+        {
+            if (input[x][y] == 0)
+            {
+                result += TraverseMap(input, x, y, true);
+            }
+        }
+    }
 
     sw.Stop();
 
     return (result, sw.Elapsed.TotalMilliseconds);
 }
 
-int TraverseMap(int[][] map, int ix, int iy)
+int TraverseMap(int[][] map, int ix, int iy, bool ignoreVisited = false)
 {
     var rows = map.Length;
     var cols = map[0].Length;
@@ -61,15 +77,20 @@ int TraverseMap(int[][] map, int ix, int iy)
     queue.Enqueue((ix, iy, 0));
     visited.Add((ix, iy));
     var heads = new HashSet<(int, int)>();
+    var rating = 0;
 
     while(queue.Count > 0)
     {
         var current = queue.Dequeue();
-        if(map[current.x][current.y] == 9) heads.Add((current.x, current.y)); // can we break?
+        if(map[current.x][current.y] == 9)
+        {
+            heads.Add((current.x, current.y)); // can we break?
+            rating++;
+        }
 
         foreach(var (nx, ny) in GetNeighbors(current.x, current.y, rows, cols))
         {
-            if (!visited.Contains((nx, ny)) && map[nx][ny] == current.height + 1)
+            if ((ignoreVisited || !visited.Contains((nx, ny))) && map[nx][ny] == current.height + 1)
             {
                 visited.Add((nx, ny));
                 queue.Enqueue((nx, ny, current.height + 1));
@@ -77,10 +98,10 @@ int TraverseMap(int[][] map, int ix, int iy)
         }
     }
 
-    return heads.Count;
+    return ignoreVisited ? rating : heads.Count;
 }
 
-static IEnumerable<(int row, int col)> GetNeighbors(int row, int col, int rows, int cols)
+IEnumerable<(int row, int col)> GetNeighbors(int row, int col, int rows, int cols)
 {
     if (row > 0)        yield return (row - 1, col);
     if (row < rows - 1) yield return (row + 1, col);
