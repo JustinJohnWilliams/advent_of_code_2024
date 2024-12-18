@@ -33,15 +33,39 @@ Console.WriteLine($"*************Day 18  DONE*************");
     return (result, sw.Elapsed.TotalMilliseconds);
 }
 
-(long result, double ms) part_two(string file)
+(string result, double ms) part_two(string file)
 {
     var sw = new System.Diagnostics.Stopwatch();
     sw.Start();
 
-    var result = 0L;
-    var map = File.ReadAllLines(file)
-                    .Select(c => c.ToCharArray())
-                    .ToArray();
+    var result = string.Empty;
+
+    var corruptionSize = 1024; // example: 12
+    var gridSize = 71;         // example: 7
+
+    var corrupted = new HashSet<(int, int)>();
+    File.ReadAllLines(file)
+        .Select(c => c.Split(','))
+        .Select(c => (Convert.ToInt32(c[0]), Convert.ToInt32(c[1])))
+        .Take(corruptionSize)
+        .ToList()
+        .ForEach(c => corrupted.Add(c));
+    
+    var input = File.ReadAllLines(file)
+        .Skip(corruptionSize)
+        .Select(c => c.Split(','))
+        .Select(c => (Convert.ToInt32(c[0]), Convert.ToInt32(c[1])))
+        .ToList();
+
+    foreach(var i in input)
+    {
+        corrupted.Add(i);
+        if(FindShortestPath(gridSize, corrupted) == -1)
+        {
+            result = $"{i.Item1},{i.Item2}";
+            break;
+        }
+    }
 
     sw.Stop();
 
