@@ -16,7 +16,7 @@
 - [14 - Restroom Redoubt *](./14/)
 - [15 - Warehouse Woes](./15/)
 - [16 - Reindeer Maze](./16/)
-- [17 - Chronospatial Computer](./17/)
+- [17 - Chronospatial Computer *](./17/)
 - [18 - RAM Run **](./18/)
 - [19]()
 - [20]()
