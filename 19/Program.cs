@@ -18,11 +18,11 @@ Console.WriteLine($"*************Day 19  DONE*************");
     var input = File.ReadAllLines(file);
     var patterns = input[0].Split(", ", StringSplitOptions.RemoveEmptyEntries);
     var designs = input.Skip(2);
-    var cache = new Dictionary<string, bool>();
+    var cache = new Dictionary<string, long>();
 
     foreach(var design in designs)
     {
-        if(CanForm(design, patterns, cache)) result++;
+        if(CountPatterns(design, patterns, cache) > 0) result++;
     }
 
     sw.Stop();
@@ -49,22 +49,6 @@ Console.WriteLine($"*************Day 19  DONE*************");
     sw.Stop();
 
     return (result, sw.Elapsed.TotalMilliseconds);
-}
-
-bool CanForm(string design, string[] patterns, Dictionary<string, bool> cache)
-{
-    if(string.IsNullOrEmpty(design)) return true;
-    if(cache.TryGetValue(design, out var result)) return result;
-
-    foreach(var pattern in patterns)
-    {
-        if(design.StartsWith(pattern) && CanForm(design.Substring(pattern.Length), patterns, cache))
-        {
-            return cache[pattern] = true;
-        }
-    }
-
-    return cache[design] = false;
 }
 
 long CountPatterns(string design, string[] towelPatterns, Dictionary<string, long> cache)
