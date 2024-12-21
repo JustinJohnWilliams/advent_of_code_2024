@@ -1,7 +1,7 @@
 Console.WriteLine();
 Console.WriteLine($"*************Day 21 START*************");
 
-var p1 = part_one("example.txt");
+var p1 = part_one("input.txt");
 var p2 = part_two("input.txt");
 
 Console.WriteLine($"Part 1 Result: {p1.result} \t: {p1.ms}ms");
@@ -16,42 +16,116 @@ Console.WriteLine($"*************Day 21  DONE*************");
     var result = 0L;
     var input = File.ReadAllLines(file);
     var codes = input.Select(c => c.Trim()).ToList();
+    var numericKeypad = NumericKeypad();
+    var directionalKeypad = DirectionalKeypad();
 
-    codes.ForEach(Console.WriteLine);
+    result += codes.Sum(code => {
+        var robot1Pushes = GenerateAllSequences(code, numericKeypad, numericKeypad['A']);
+        var robot2Pushes = robot1Pushes
+            .SelectMany(seq => GenerateAllSequences(seq, directionalKeypad, directionalKeypad['A']))
+            .ToList();
+        var robot3Pushes = robot2Pushes
+            .SelectMany(seq => GenerateAllSequences(seq, directionalKeypad, directionalKeypad['A']))
+            .ToList();
 
-    Console.WriteLine($"Known thing: {"<vA<AA>>^AvAA<^A>A<v<A>>^AvA^A<vA>^A<v<A>^A>AAvA^A<v<A>A>^AAAvA<^A>A".Length}");
-
-    Console.WriteLine($"Example 1 should be:");
-    Console.WriteLine($"<A^A>^^AvvvA - {"<A^A>^^AvvvA".Length}");
-    Console.WriteLine($"v<<A>>^A<A>AvA<^AA>A<vAAA>^A - {"v<<A>>^A<A>AvA<^AA>A<vAAA>^A".Length}");
-    Console.WriteLine($"<vA<AA>>^AvAA<^A>A<v<A>>^AvA^A<vA>^A<v<A>^A>AAvA^A<v<A>A>^AAAvA<^A>A - {"<vA<AA>>^AvAA<^A>A<v<A>>^AvA^A<vA>^A<v<A>^A>AAvA^A<v<A>A>^AAAvA<^A>A".Length}");
-    Console.WriteLine($"-------------------------");
-    Console.WriteLine($"But is:");
-
-    result += codes.Sum(code => 
-    {
-        var numericKeypad = NumericKeypad();
-        var directionalKeypad = DirectionalKeypad();
-
-        var numericSequence = GenerateRobotSequence(code, numericKeypad, numericKeypad['A']);
-        Console.WriteLine($"{numericSequence} - {numericSequence.Length}");
-        //numericSequence = "<A^A>^^AvvvA";
-        //Console.WriteLine($"{numericSequence} - {numericSequence.Length}");
-        var robot2Sequence = GenerateRobotSequence(numericSequence, directionalKeypad, directionalKeypad['A']);
-        Console.WriteLine($"{robot2Sequence} - {robot2Sequence.Length}");
-        //robot2Sequence = "v<<A>>^A<A>AvA<^AA>A<vAAA>^A";
-        //Console.WriteLine($"{robot2Sequence} - {robot2Sequence.Length}");
-        var robot1Sequence = GenerateRobotSequence(robot2Sequence, directionalKeypad, directionalKeypad['A']);
-        Console.WriteLine($"{robot1Sequence} - {robot1Sequence.Length}");
+        var best = robot3Pushes.OrderBy(seq => seq.Length).First();
 
         int numericPart = int.Parse(new string(code.Where(char.IsDigit).ToArray()));
-
-        return robot1Sequence.Length * numericPart;
+        return (long)best.Length * numericPart;
     });
 
     sw.Stop();
 
     return (result, sw.Elapsed.TotalMilliseconds);
+}
+
+(long result, double ms) part_two(string file)
+{
+    var sw = new System.Diagnostics.Stopwatch();
+    sw.Start();
+
+    var result = 0L;
+    var input = File.ReadAllLines(file);
+    var codes = input.Select(c => c.Trim()).ToList();
+
+    sw.Stop();
+
+    return (result, sw.Elapsed.TotalMilliseconds);
+}
+
+IEnumerable<string> GenerateAllSequences(string targetSequence, Dictionary<char, (int x, int y)> keypad, (int x, int y) startPosition)
+{
+    var results = new List<string>();
+    var currentPosition = startPosition;
+
+    foreach (var ch in targetSequence)
+    {
+        var targetPosition = keypad[ch];
+        var paths = FindAllShortestPaths(currentPosition, targetPosition, keypad);
+
+        var newResults = new List<string>();
+        foreach (var result in results.DefaultIfEmpty(""))
+        {
+            foreach (var path in paths)
+            {
+                newResults.Add(result + path + 'A');
+            }
+        }
+
+        results = newResults;
+        currentPosition = targetPosition;
+    }
+
+    return results;
+}
+
+IEnumerable<string> FindAllShortestPaths((int x, int y) start, (int x, int y) target, Dictionary<char, (int x, int y)> keypad)
+{
+    var directions = new[] {
+        ('^', 0, -1), ('v', 0, 1),
+        ('<', -1, 0), ('>', 1, 0) };
+
+    var queue = new Queue<(int x, int y, List<char> path)>();
+    var visited = new HashSet<(int x, int y)>();
+    var shortestPaths = new List<string>();
+    int shortestLength = int.MaxValue;
+
+    queue.Enqueue((start.x, start.y, new List<char>()));
+    visited.Add(start);
+
+    while (queue.Count > 0)
+    {
+        var (x, y, path) = queue.Dequeue();
+        if (path.Count > shortestLength) continue;
+
+        if ((x, y) == target)
+        {
+            if (path.Count < shortestLength)
+            {
+                shortestLength = path.Count;
+                shortestPaths.Clear();
+            }
+            shortestPaths.Add(new string(path.ToArray()));
+            continue;
+        }
+
+        foreach (var (dir, dx, dy) in directions)
+        {
+            (int x, int y) next = (x + dx, y + dy);
+
+            if (IsValidPosition(next.x, next.y, keypad))
+            {
+                var newPath = new List<char>(path) { dir };
+                if (!visited.Contains(next) || newPath.Count <= shortestLength)
+                {
+                    visited.Add(next);
+                    queue.Enqueue((next.x, next.y, newPath));
+                }
+            }
+        }
+    }
+
+    return shortestPaths;
 }
 
 Dictionary<char, (int x, int y)> NumericKeypad() => new() {
@@ -66,68 +140,4 @@ Dictionary<char, (int x, int y)> DirectionalKeypad() => new() {
         {'<', (0, 1)}, {'v', (1, 1)}, {'>', (2, 1)}
     };
 
-string GenerateRobotSequence(string targetSequence, Dictionary<char, (int x, int y)> keypad, (int x, int y) startPosition)
-{
-    var currentPosition = startPosition;
-    var sequence = new List<char>();
-
-    foreach (var ch in targetSequence)
-    {
-        var targetPosition = keypad[ch];
-        var path = FindShortestPath(currentPosition, targetPosition, keypad);
-        sequence.AddRange(path);
-        sequence.Add('A'); // Press the button
-        currentPosition = targetPosition;
-    }
-
-    return new string(sequence.ToArray());
-}
-
-IEnumerable<char> FindShortestPath((int x, int y) start, (int x, int y) target, Dictionary<char, (int x, int y)> keypad)
-{
-    // this matters for some reason. down, right, up, left seems to be the closest??
-    var directions = new (char dir, int dx, int dy)[] {
-        ('v', 0,  1), ('>',  1, 0),
-        ('^', 0, -1), ('<', -1, 0),
-    };
-    var visited = new HashSet<(int x, int y)> { start };
-    var queue = new Queue<(int x, int y, List<char> path)>();
-    queue.Enqueue((start.x, start.y, new List<char>()));
-
-    while (queue.Count > 0)
-    {
-        var (x, y, path) = queue.Dequeue();
-        if ((x, y) == target) return path;
-        
-        foreach (var (dir, dx, dy) in directions)
-        {
-            var next = (x + dx, y + dy);
-            if (IsValidPosition(next.Item1, next.Item2, keypad) && !visited.Contains(next))
-            {
-                visited.Add(next);
-                var newPath = new List<char>(path) { dir };
-                queue.Enqueue((next.Item1, next.Item2, newPath));
-            }
-        }
-    }
-
-    throw new InvalidOperationException("No valid path to the target position.");
-}
-
-bool IsValidPosition(int x, int y, Dictionary<char, (int x, int y)> keypad) =>
-    keypad.Values.Any(c => c.x == x
-                        && c.y == y);
-
-(long result, double ms) part_two(string file)
-{
-    var sw = new System.Diagnostics.Stopwatch();
-    sw.Start();
-
-    var result = 0L;
-    var input = File.ReadAllLines(file);
-
-    sw.Stop();
-
-    return (result, sw.Elapsed.TotalMilliseconds);
-}
-
+bool IsValidPosition(int x, int y, Dictionary<char, (int x, int y)> keypad) => keypad.Values.Any(c => c.x == x && c.y == y);
