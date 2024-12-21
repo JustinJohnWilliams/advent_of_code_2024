@@ -34,14 +34,28 @@ Console.WriteLine($"*************Day 17  DONE*************");
     var result = string.Empty;
     var input = File.ReadAllLines(file);
 
+    var registers = ParseRegisters(input);
+    var instructions = ParseProgram(input);
+
+    for(long i = int.MaxValue; i < long.MaxValue; i++)
+    {
+        registers.A = i;
+        if(RunProgram(registers, instructions) == string.Join(",", instructions))
+        {
+            result = i.ToString();
+            break;
+        }
+
+    }
+
     sw.Stop();
 
     return (result, sw.Elapsed.TotalMilliseconds);
 }
 
-(int A, int B, int C) ParseRegisters(string[] lines)
+(long A, long B, long C) ParseRegisters(string[] lines)
 {
-    int A = 0, B = 0, C = 0;
+    long A = 0, B = 0, C = 0;
     foreach(var line in lines)
     {
         if(!line.Contains("Register")) continue;
@@ -70,10 +84,10 @@ List<int> ParseProgram(string[] lines)
     return instructions;
 }
 
-string RunProgram((int A, int B, int C) registers, List<int> instructions)
+string RunProgram((long A, long B, long C) registers, List<int> instructions)
 {
-    int A = registers.A, B = registers.B, C = registers.C;
-    var output = new List<int>();
+    long A = registers.A, B = registers.B, C = registers.C;
+    var output = new List<long>();
     int i = 0;
 
     while(i < instructions.Count)
@@ -85,7 +99,7 @@ string RunProgram((int A, int B, int C) registers, List<int> instructions)
         switch(opcode)
         {
             case 0: // adv
-                A /= (int)Math.Pow(2, GetComboOperandValue(operand, A, B, C));
+                A /= (long)Math.Pow(2, GetComboOperandValue(operand, A, B, C));
                 break;
             case 1: // bxl
                 B ^= operand;
@@ -104,10 +118,10 @@ string RunProgram((int A, int B, int C) registers, List<int> instructions)
                 output.Add(GetComboOperandValue(operand, A, B, C) % 8);
                 break;
             case 6: // bdv
-                B = A / (int)Math.Pow(2, GetComboOperandValue(operand, A, B, C));
+                B = A / (long)Math.Pow(2, GetComboOperandValue(operand, A, B, C));
                 break;
             case 7: // cdv
-                C = A / (int)Math.Pow(2, GetComboOperandValue(operand, A, B, C));
+                C = A / (long)Math.Pow(2, GetComboOperandValue(operand, A, B, C));
                 break;
         }
     }
@@ -115,7 +129,7 @@ string RunProgram((int A, int B, int C) registers, List<int> instructions)
     return string.Join(",", output);
 }
 
-int GetComboOperandValue(int operand, int A, int B, int C)
+long GetComboOperandValue(long operand, long A, long B, long C)
 {
     return operand switch
     {
