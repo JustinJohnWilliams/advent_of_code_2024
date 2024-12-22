@@ -18,14 +18,16 @@ Console.WriteLine($"*************Day 21  DONE*************");
     var codes = input.Select(c => c.Trim()).ToList();
     var numericKeypad = NumericKeypad();
     var directionalKeypad = DirectionalKeypad();
+    var numericPathCache = new Dictionary<(char, char), List<string>>();
+    var directionalPathCache = new Dictionary<(char, char), List<string>>();
 
     result += codes.Sum(code => {
-        var robot1Pushes = GenerateAllSequences(code, numericKeypad, numericKeypad['A']);
+        var robot1Pushes = GenerateAllSequences(code, numericKeypad, numericKeypad['A'], numericPathCache);
         var robot2Pushes = robot1Pushes
-            .SelectMany(seq => GenerateAllSequences(seq, directionalKeypad, directionalKeypad['A']))
+            .SelectMany(seq => GenerateAllSequences(seq, directionalKeypad, directionalKeypad['A'], directionalPathCache))
             .ToList();
         var robot3Pushes = robot2Pushes
-            .SelectMany(seq => GenerateAllSequences(seq, directionalKeypad, directionalKeypad['A']))
+            .SelectMany(seq => GenerateAllSequences(seq, directionalKeypad, directionalKeypad['A'], directionalPathCache))
             .ToList();
 
         var best = robot3Pushes.OrderBy(seq => seq.Length).First();
@@ -47,13 +49,35 @@ Console.WriteLine($"*************Day 21  DONE*************");
     var result = 0L;
     var input = File.ReadAllLines(file);
     var codes = input.Select(c => c.Trim()).ToList();
+    var numericKeypad = NumericKeypad();
+    var directionalKeypad = DirectionalKeypad();
+    var numericPathCache = new Dictionary<(char, char), List<string>>();
+    var directionalPathCache = new Dictionary<(char, char), List<string>>();
 
+    result += codes.Sum(code =>
+    {
+        var sequences = GenerateAllSequences(code, numericKeypad, numericKeypad['A'], numericPathCache);
+
+        for (int i = 0; i < 25; i++)
+        {
+            Console.WriteLine($"Processing: robot {i +1}");
+            Console.WriteLine($"Cache has {directionalPathCache.Keys.Count}");
+            sequences = sequences
+                .SelectMany(seq => GenerateAllSequences(seq, directionalKeypad, directionalKeypad['A'], directionalPathCache))
+                .ToList();
+        }
+
+        var shortestSequence = sequences.OrderBy(seq => seq.Length).First();
+
+        int numericPart = int.Parse(new string(code.Where(char.IsDigit).ToArray()));
+        return (long)shortestSequence.Length * numericPart;
+    });
     sw.Stop();
 
     return (result, sw.Elapsed.TotalMilliseconds);
 }
 
-IEnumerable<string> GenerateAllSequences(string targetSequence, Dictionary<char, (int x, int y)> keypad, (int x, int y) startPosition)
+IEnumerable<string> GenerateAllSequences(string targetSequence, Dictionary<char, (int x, int y)> keypad, (int x, int y) startPosition, Dictionary<(char, char), List<string>> cache)
 {
     var results = new List<string>();
     var currentPosition = startPosition;
@@ -61,7 +85,12 @@ IEnumerable<string> GenerateAllSequences(string targetSequence, Dictionary<char,
     foreach (var ch in targetSequence)
     {
         var targetPosition = keypad[ch];
-        var paths = FindAllShortestPaths(currentPosition, targetPosition, keypad);
+        var key = (keypad.First(k => k.Value == currentPosition).Key, ch);
+        if(!cache.TryGetValue(key, out var paths))
+        {
+            paths = FindAllShortestPaths(currentPosition, targetPosition, keypad).ToList();
+            cache[key] = paths;
+        }
 
         var newResults = new List<string>();
         foreach (var result in results.DefaultIfEmpty(""))
