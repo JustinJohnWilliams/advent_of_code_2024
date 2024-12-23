@@ -27,13 +27,19 @@ Console.WriteLine($"*************Day 23  DONE*************");
     return (result, sw.Elapsed.TotalMilliseconds);
 }
 
-(long result, double ms) part_two(string file)
+(string result, double ms) part_two(string file)
 {
     var sw = new System.Diagnostics.Stopwatch();
     sw.Start();
 
-    var result = 0L;
-    var input = File.ReadAllLines(file);
+    var result = string.Empty;
+    var computers = File.ReadAllLines(file)
+                        .Select(c => c.Split('-'))
+                        .ToList();
+    
+    var graph = BuildRelationships(computers);
+
+    result = FindPassword(graph);
 
     sw.Stop();
 
@@ -87,6 +93,35 @@ int CountThreeWays(Dictionary<string, HashSet<string>> graph, string key)
     }
 
     return count;
+}
+
+string FindPassword(Dictionary<string, HashSet<string>> graph)
+{
+    HashSet<string> largestCluster = [];
+
+    foreach (var node in graph.Keys)
+    {
+        var cluster = FindCluster(graph, node);
+        if (!largestCluster.Any() || cluster.Count > largestCluster.Count)
+        {
+            largestCluster = cluster;
+        }
+    }
+
+    return string.Join(",", largestCluster.OrderBy(name => name));
+}
+
+HashSet<string> FindCluster(Dictionary<string, HashSet<string>> graph, string startNode)
+{
+    var cluster = new HashSet<string> { startNode };
+    foreach (var neighbor in graph[startNode])
+    {
+        if (graph[neighbor].IsSupersetOf(cluster))
+        {
+            cluster.Add(neighbor);
+        }
+    }
+    return cluster;
 }
 
 public static class Extensions
