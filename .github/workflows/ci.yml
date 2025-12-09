@@ -2,21 +2,125 @@ name: Advent of Code Builder
 
 on: [push]
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
 jobs:
   build:
-    name: build and run
+    name: AoC 2024
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+      - name: Create input files
+        env:
+          DAY01: ${{ secrets.DAY01 }}
+          DAY02: ${{ secrets.DAY02 }}
+          DAY03: ${{ secrets.DAY03 }}
+          DAY04: ${{ secrets.DAY04 }}
+          DAY05: ${{ secrets.DAY05 }}
+          DAY06: ${{ secrets.DAY06 }}
+          DAY07: ${{ secrets.DAY07 }}
+          DAY08: ${{ secrets.DAY08 }}
+          DAY09: ${{ secrets.DAY09 }}
+          DAY10: ${{ secrets.DAY10 }}
+          DAY11: ${{ secrets.DAY11 }}
+          DAY12: ${{ secrets.DAY12 }}
+          DAY13: ${{ secrets.DAY13 }}
+          DAY14: ${{ secrets.DAY14 }}
+          DAY15: ${{ secrets.DAY15 }}
+          DAY16: ${{ secrets.DAY16 }}
+          DAY17: ${{ secrets.DAY17 }}
+          DAY18: ${{ secrets.DAY18 }}
+          DAY19: ${{ secrets.DAY19 }}
+          DAY20: ${{ secrets.DAY20 }}
+          DAY21: ${{ secrets.DAY21 }}
+          DAY22: ${{ secrets.DAY22 }}
+          DAY23: ${{ secrets.DAY23 }}
+          DAY24: ${{ secrets.DAY24 }}
+          DAY25: ${{ secrets.DAY25 }}
+        run: |
+          mkdir -p inputs
+          printf '%s' "$DAY01" > inputs/01.txt
+          printf '%s' "$DAY02" > inputs/02.txt
+          printf '%s' "$DAY03" > inputs/03.txt
+          printf '%s' "$DAY04" > inputs/04.txt
+          printf '%s' "$DAY05" > inputs/05.txt
+          printf '%s' "$DAY06" > inputs/06.txt
+          printf '%s' "$DAY07" > inputs/07.txt
+          printf '%s' "$DAY08" > inputs/08.txt
+          printf '%s' "$DAY09" > inputs/09.txt
+          printf '%s' "$DAY10" > inputs/10.txt
+          printf '%s' "$DAY11" > inputs/11.txt
+          printf '%s' "$DAY12" > inputs/12.txt
+          printf '%s' "$DAY13" > inputs/13.txt
+          printf '%s' "$DAY14" > inputs/14.txt
+          printf '%s' "$DAY15" > inputs/15.txt
+          printf '%s' "$DAY16" > inputs/16.txt
+          printf '%s' "$DAY17" > inputs/17.txt
+          printf '%s' "$DAY18" > inputs/18.txt
+          printf '%s' "$DAY19" > inputs/19.txt
+          printf '%s' "$DAY20" > inputs/20.txt
+          printf '%s' "$DAY21" > inputs/21.txt
+          printf '%s' "$DAY22" > inputs/22.txt
+          printf '%s' "$DAY23" > inputs/23.txt
+          printf '%s' "$DAY24" > inputs/24.txt
+          printf '%s' "$DAY25" > inputs/25.txt
       - name: Setup dotnet
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: 9.0.x
       - name: Run all the things
         run: |
-            find . -name '*.csproj' -exec dirname {} \; | sort | while read dir; do
-              cd $dir
-              dotnet run || echo "Failed to run $dir"
-              cd -
-            done
+          OUTPUT="$(dotnet run --configuration Release)"
+          echo "$OUTPUT" >> $GITHUB_STEP_SUMMARY
+
+          mkdir -p _site
+          {
+            echo '<!DOCTYPE html>'
+            echo '<html lang="en">'
+            echo '<head>'
+            echo '  <meta charset="utf-8" />'
+            echo '  <title>Advent of Code 2024</title>'
+            echo '  <meta name="viewport" content="width=device-width,initial-scale=1" />'
+            echo '  <style>'
+            echo '    body { font-family: system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;'
+            echo '           padding: 1.5rem; background: #0d1117; color: #c9d1d9; }'
+            echo '    pre  { background: #161b22; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; }'
+            echo '    h1   { margin-top: 0; }'
+            echo '  </style>'
+            echo '</head>'
+            echo '<body>'
+            echo '  <h1>Advent of Code 2024</h1>'
+            echo '  <pre>'
+            printf '%s\n' "$OUTPUT"
+            echo '  </pre>'
+            echo '</body>'
+            echo '</html>'
+          } > _site/index.html
+      - name: Upload GitHub Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+  deploy:
+    needs: build
+    name: Deploy
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+      - name: Print Summary
+        run: |
+          echo "## 🔗 Pages URL" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "[View Live Results](${{ steps.deployment.outputs.page_url }})" >> $GITHUB_STEP_SUMMARY

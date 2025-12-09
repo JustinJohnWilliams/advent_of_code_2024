@@ -1,4 +1,6 @@
-# Advent of Code 2024
+# 🎄 Advent of Code 2024 🎄
+
+[![Results](https://img.shields.io/badge/Results-2024-brightgreen?style=for-the-badge)](https://justinjohnwilliams.github.io/advent_of_code_2024/)
 
 - [01 - Historian Hysteria **](./README/01.md)
 - [02 - Red-Nosed Reports **](./README/02.md)
