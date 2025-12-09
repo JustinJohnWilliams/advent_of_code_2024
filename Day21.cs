@@ -38,6 +38,9 @@ public class Day21(string name, string input, string example, string r1 = "", st
         var numericPathCache = new Dictionary<(char, char), List<string>>();
         var directionalPathCache = new Dictionary<(char, char), List<string>>();
 
+        // WIP: (endless loop)
+
+        /*
         result += codes.Sum(code =>
         {
             var sequences = GenerateAllSequences(code, numericKeypad, numericKeypad['A'], numericPathCache);
@@ -56,6 +59,7 @@ public class Day21(string name, string input, string example, string r1 = "", st
             int numericPart = int.Parse(new string(code.Where(char.IsDigit).ToArray()));
             return (long)shortestSequence.Length * numericPart;
         });
+        */
 
         return result.ToString();
     }
